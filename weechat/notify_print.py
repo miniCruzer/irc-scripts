@@ -44,6 +44,10 @@ SCRIPT_DESC = "Print connect/disconnect messages to query buffers for /notify us
 w.register(SCRIPT_NAME, SCRIPT_AUTHOR, SCRIPT_VERSION,
            SCRIPT_LICENSE, SCRIPT_DESC, "", "")
 
+if int(w.info_get("version", "")) < 0x00030800:
+    w.prnt("This script is only compatible with WeeChat >= 0.3.8")
+    
+
 COMMON = set()  # type: Set[str]
 
 def get_notify_list():
