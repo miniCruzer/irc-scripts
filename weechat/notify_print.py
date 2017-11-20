@@ -70,8 +70,12 @@ def get_notify_list(*args, **kwargs):
 
 
 def hide_buffer_quit_join(data, modifier, modifier_data, string):
-
-    plugin, name, tags = modifier_data.split(";")
+    """ callback for modifying printed data. used to hide irc_quit/irc_nick_back messages in query
+    buffers with notify list users """
+    try:
+        plugin, name, tags = modifier_data.split(";")
+    except ValueError:
+        return string
 
     if name not in COMMON:
         return string
