@@ -329,6 +329,8 @@ def irc_discon_cb(data, signal, signal_data):
         if name.startswith(signal_data):
             del BUFFERS[name]
 
+    return w.WEECHAT_RC_OK
+
 def buffer_closed_cb(data, signal, signal_data):
     """ callback for when a buffer closes. used to invalidate query windows so we don't try to print
     to a closed query buffer.  """
