@@ -44,13 +44,13 @@ SCRIPT_DESC = "Print connect/disconnect messages to query buffers for /notify us
 w.register(SCRIPT_NAME, SCRIPT_AUTHOR, SCRIPT_VERSION,
            SCRIPT_LICENSE, SCRIPT_DESC, "", "")
 
-if int(w.info_get("version", "")) < 0x00030800:
+if int(w.info_get("version_number", "")) < 0x00030800:
     w.prnt("This script is only compatible with WeeChat >= 0.3.8")
-    
+
 
 COMMON = set()  # type: Set[str]
 
-def get_notify_list():
+def get_notify_list(*args, **kwargs):
     """ load the current notify list """
     infolist = w.infolist_get("irc_notify", "", "")
 
@@ -114,16 +114,11 @@ def notify_quit_cb(data, signal, signal_data):
     return w.WEECHAT_RC_OK
 
 
-def notify_cmd_cb(*args, **kwargs):
-    get_notify_list()
-    return w.WEECHAT_RC_OK
-
-
 w.hook_signal("irc_notify_join", "notify_join_cb", "")
 w.hook_signal("irc_notify_quit", "notify_quit_cb", "")
 w.hook_modifier("weechat_print", "hide_buffer_quit_join", "")
 
-w.hook_command_run("/notify add*", "notify_cmd_cb", "")
-w.hook_command_run("/notify del*", "notify_cmd_cb", "")
+w.hook_command_run("/notify add*", "get_notify_list", "")
+w.hook_command_run("/notify del*", "get_notify_list", "")
 
 get_notify_list()
