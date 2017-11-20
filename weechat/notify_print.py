@@ -73,7 +73,7 @@ def hide_buffer_quit_join(data, modifier, modifier_data, string):
     """ callback for modifying printed data. used to hide irc_quit/irc_nick_back messages in query
     buffers with notify list users """
     try:
-        plugin, name, tags = modifier_data.split(";")
+        plugin, name, tags = modifier_data.split(";", 2)
     except ValueError:
         return string
 
@@ -109,7 +109,7 @@ def notify_quit_cb(data, signal, signal_data):
     server, nick = signal_data.split(",")
 
     buf = w.info_get("irc_buffer", server + ",," + nick)
-    if buf is None:
+    if not buf:
         return w.WEECHAT_RC_OK
 
     w.prnt(buf, "{}{}{}{} has disconnected".format(w.prefix("quit"),
