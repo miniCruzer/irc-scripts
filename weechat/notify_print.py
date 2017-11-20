@@ -61,7 +61,6 @@ def get_notify_list(*args, **kwargs):
     while w.infolist_next(infolist):
         nick = w.infolist_string(infolist, "nick")
         server = w.infolist_string(infolist, "server_name")
-        online = w.infolist_integer(infolist, "is_on_server")
 
         COMMON.add(server + "." + nick)
 
