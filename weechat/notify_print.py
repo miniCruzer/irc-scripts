@@ -67,6 +67,8 @@ def get_notify_list(*args, **kwargs):
 
     w.infolist_next(infolist)
 
+    return w.WEECHAT_RC_OK
+
 
 def hide_buffer_quit_join(data, modifier, modifier_data, string):
 
