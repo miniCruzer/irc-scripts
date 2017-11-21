@@ -64,7 +64,7 @@ def get_notify_list(*args, **kwargs):
 
         COMMON.add(server + "." + nick)
 
-    w.infolist_next(infolist)
+    w.infolist_free(infolist)
 
     return w.WEECHAT_RC_OK
 
