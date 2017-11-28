@@ -219,6 +219,8 @@ def away_in_cb(data, signal, signal_data):
             if seconds:
                 dur += "{} second{}".format(seconds, "s" if seconds > 1 else "")
 
+            dur = dur.rstrip()
+
         if dur:
 
             msg += config_get("print_back_duration_format")
