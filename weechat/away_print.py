@@ -85,7 +85,7 @@ DEFAULT_SETTINGS = {
 
 }
 
-KNOWN_AWAY = defaultdict(dict)  # type: Dict[str, Dict[str, datetime]]
+KNOWN_AWAY = defaultdict(dict)  # type: Dict[str, Dict[str, Tuple[datetime, str]]]
 CACHE = defaultdict(dict)  # type: Dict[str, Dict[str, Set]]
 COLOR = {}  # type: Dict[str, str]
 BUFFERS = {}  # type: Dict[str, str]
@@ -200,9 +200,24 @@ def away_in_cb(data, signal, signal_data):
     awaymsg = ircmsg["text"]
     if not awaymsg:
 
-        dur = None
+        dur = ""
         if nick in KNOWN_AWAY[server]:
-            dur = str(datetime.now() - KNOWN_AWAY[server].pop(nick))
+            tdelta = datetime.now() - KNOWN_AWAY[server].pop(nick)[0]
+            days = tdelta.days
+            hours, remainder = divmod(tdelta.seconds, 3600)
+            minutes, seconds = divmod(remainder, 60)
+
+            if days:
+                dur = "{} day{} ".format(days, "s" if days > 1 else "")
+
+            if hours:
+                dur += "{} hour{} ".format(hours, "s" if hours > 1 else "")
+
+            if minutes:
+                dur += "{} minute{} ".format(minutes, "s" if minutes > 1 else "")
+
+            if seconds:
+                dur += "{} second{}".format(seconds, "s" if seconds > 1 else "")
 
         if dur:
 
@@ -217,19 +232,19 @@ def away_in_cb(data, signal, signal_data):
 
     else:
 
-        if nick in KNOWN_AWAY[server]:
+        if nick in KNOWN_AWAY[server] and awaymsg != KNOWN_AWAY[server][nick][1]:
             msg += config_get("print_changed_format")
             msg = msg.replace("$away", awaymsg)
 
             msg = w.string_eval_expression(msg, {}, {}, {})
             propagate_common_msg(server, nick, msg)
-            KNOWN_AWAY[server][nick] = datetime.now()
+            KNOWN_AWAY[server][nick] = (datetime.now(), awaymsg)
         else:
             msg += config_get("print_away_format")
             msg = msg.replace("$away", awaymsg)
 
             msg = w.string_eval_expression(msg, {}, {}, {})
-            KNOWN_AWAY[server][nick] = datetime.now()
+            KNOWN_AWAY[server][nick] = (datetime.now(), awaymsg)
             propagate_common_msg(server, nick, msg)
 
     return w.WEECHAT_RC_OK
@@ -253,7 +268,7 @@ def nick_in_cb(data, signal, signal_data):
     return w.WEECHAT_RC_OK
 
 def part_in_cb(data, signal, signal_data):
-    """ callback for a user parting a channel. invalide cache entries """
+    """ callback for a user parting a channel. invalidate cache entries """
     ircmsg = w.info_get_hashtable("irc_message_parse", {"message": signal_data})
     server = signal.split(",")[0]
     channel = ircmsg["channel"]
