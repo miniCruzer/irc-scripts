@@ -59,7 +59,7 @@ except ImportError:
 
 SCRIPT_NAME = "away_print"
 SCRIPT_AUTHOR = "cruzr <sam@gentoo.party>"
-SCRIPT_VERSION = "1"
+SCRIPT_VERSION = "2"
 SCRIPT_LICENSE = "MIT"
 SCRIPT_DESC = "Print changes in AWAY status on buffers for servers where away-notify is enabled."
 
