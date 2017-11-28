@@ -51,7 +51,11 @@ except ImportError:
 
 from datetime import datetime
 from collections import defaultdict
-from typing import Any, Dict, Generator, Match, Set, Tuple  # pylint: disable=unused-import
+
+try:
+    from typing import Any, Dict, Generator, Match, Set, Tuple  # pylint: disable=unused-import
+except ImportError:
+    pass
 
 SCRIPT_NAME = "away_print"
 SCRIPT_AUTHOR = "cruzr <sam@gentoo.party>"
