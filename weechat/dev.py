@@ -66,10 +66,10 @@ def dev_cmd_cb(data, buf, args):
 
         if command in EVENTS:
             if len(args) < SIG[command]:
-                w.prnt('', f"not enough arguments for /dev {command}")
+                w.prnt('', f"not enough arguments for {command}")
                 return w.WEECHAT_RC_ERROR
             elif len(args) > SIG[command]:
-                w.prnt('', f"too many arguments for /dev {command}")
+                w.prnt('', f"too many arguments for {command}")
                 return w.WEECHAT_RC_ERROR
 
             EVENTS[command](*args)
@@ -151,6 +151,49 @@ def dev_get(name):
     else:
         w.prnt("", f"error occured getting infolist {name}")
 
+@hook("iter", 1)
+def dev_iter(ptr):
+    """ iterate all fields of all items of an infolist pointer """
+    buf = w.buffer_new(f"infolist {ptr}", "", "", "", "")
+
+    infos = [] # type: List[Dict[str, Tuple]]
+
+    while w.infolist_next(ptr):
+
+        this = {}
+        for field in w.infolist_fields(ptr).split(","):
+            ftype, name = field.split(":", 1)
+            if ftype == "i":
+                this[name] = ftype, f"{w.color('*lightgreen') + str(w.infolist_integer(ptr, name))}"
+            elif ftype == "s":
+                this[name] = ftype, w.color('*214') + f"{w.infolist_string(ptr, name)!r}"
+            elif ftype == "p":
+                this[name] = ftype, f"{w.color('*yellow') + w.infolist_pointer(ptr, name)}"
+            elif ftype == "t":
+                this[name] = ftype, f"{w.color('magenta') + w.infolist_time(ptr, name)}"
+            else:
+                this[name] = "(not available in scripting API)"
+
+        infos.append(this)
+
+    for item in infos:
+
+        pad = 0
+        for key in item:
+            if len(key) > pad:
+                pad = len(key)
+
+        for name, (ftype, value) in item.items():
+
+            w.prnt(buf, w.color('blue') + f"{name: <{pad}}" + w.color('reset') +
+                   f" = ({ftype}) {value}")
+
+        w.prnt(buf, f"{w.color('red')}---")
+
+
+    w.buffer_set(buf, "title", f"infolist {ptr}, iterated {len(infos)} item(s)")
+
+
 w.hook_command("infolist",
 
                "manipulate infolists in weechat's memory. arbitrarily acting upon infolists in"
@@ -158,7 +201,7 @@ w.hook_command("infolist",
                " dangerous. proceed with caution",
 
                "[free|fields|reset|next|prev [ptr]]"
-               " | [integer|string|pointer|time [ptr] [field]"
+               " | [integer|string|pointer|time|iter [ptr] [field]"
                " | get [infolist]",
 
                "   free: free an infolist pointer\n"
@@ -168,10 +211,11 @@ w.hook_command("infolist",
                " string: get a string value from an infolist\n"
                "pointer: get a pointer value from an infolist\n"
                "   time: get a time value from an infolist\n"
+               "   iter: print all fields of all items from an infolist\n"
                "    get: get an infolist by name\n"
                "\n"
                "see <https://weechat.org/files/doc/stable/weechat_plugin_api.en.html#infolists>",
 
-               "free || fields || reset || integer || string || pointer || buffer || time"
+               "free || fields || reset || integer || string || pointer || buffer || time || iter"
                " || get %(infolists)",
                "dev_cmd_cb", "")
