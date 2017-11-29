@@ -26,6 +26,7 @@ dev.py: script developer helper stuff
 
 """
 
+# pylint: disable=W0603
 
 try:
     import weechat as w
@@ -34,7 +35,7 @@ except ImportError:
     print("Load this script from WeeChat.")
     sys.exit()
 
-from typing import Callable, Dict
+from typing import Callable, Dict, Tuple # pylint: disable=unused-import
 
 SCRIPT_NAME = "dev"
 SCRIPT_AUTHOR = "Samuel Hoffman <sam@gentoo.party>"
@@ -49,16 +50,20 @@ EVENTS = {} # type: Dict[str, Callable]
 SIG = {} # type: Dict[str, int]
 
 def hook(command: str, nargs: int) -> Callable:
+    """ decorator for hooking a function to a sub command """
     global EVENTS, SIG
     def ev_dec(fn):
+        """ the actual decorator """
         EVENTS[command] = fn
         SIG[command] = nargs
         def wrapper(*args, **kwargs):
+            """ wrapped function """
             return fn(*args, **kwargs)
         return wrapper
     return ev_dec
 
 def dev_cmd_cb(data, buf, args):
+    """ callback for when the /infolist command is issued within WeeChat """
     args = args.split()
 
     if len(args) > 1:

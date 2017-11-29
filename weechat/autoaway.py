@@ -31,6 +31,8 @@ Settings: plugins.var.python.autoaway.*
 Python 3.6 or later required.
 """
 
+# pylint: disable=W0603
+
 try:
     import weechat as w
 except ImportError:
