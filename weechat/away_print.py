@@ -49,11 +49,11 @@ try:
 except ImportError:
     print("Load this script from WeeChat.")
 
-from datetime import datetime
 from collections import defaultdict
+from datetime import datetime
 
 try:
-    from typing import Any, Dict, Generator, Match, Set, Tuple  # pylint: disable=unused-import
+    from typing import List, Dict, Set, Tuple  # pylint: disable=unused-import
 except ImportError:
     pass
 
@@ -245,7 +245,7 @@ def away_in_cb(data, signal, signal_data):
             msg = w.string_eval_expression(msg, {}, {}, {})
             propagate_common_msg(server, nick, msg)
             KNOWN_AWAY[server][nick] = (datetime.now(), awaymsg)
-        else:
+        elif nick not in KNOWN_AWAY[server]:
             msg += config_get("print_away_format")
             msg = msg.replace("$away", awaymsg)
 
@@ -316,7 +316,9 @@ def kick_in_cb(data, signal, signal_data):
 
         del BUFFERS[server + "." + channel]
     elif nick in CACHE[server]:
-        CACHE[server][nick].discard(ircmsg["channel"])
+        debug("user kicked from {0}.{1}, discarding channel from CACHE[{0}][{2}]",
+              server, channel, nick)
+        CACHE[server][nick].discard(channel)
 
     return w.WEECHAT_RC_OK
 
@@ -359,7 +361,7 @@ def buffer_closed_cb(data, signal, signal_data):
     for name, ptr in BUFFERS.items():
         if ptr == signal_data:
             del BUFFERS[name]
-            return w.WEECHAT_RC_OK
+            break
 
     return w.WEECHAT_RC_OK
 
