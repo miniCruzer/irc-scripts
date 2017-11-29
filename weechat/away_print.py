@@ -47,7 +47,9 @@ for example:
 try:
     import weechat as w
 except ImportError:
+    import sys
     print("Load this script from WeeChat.")
+    sys.exit()
 
 from collections import defaultdict
 from datetime import datetime
@@ -67,34 +69,21 @@ w.register(SCRIPT_NAME, SCRIPT_AUTHOR, SCRIPT_VERSION,
            SCRIPT_LICENSE, SCRIPT_DESC, "", "")
 
 DEFAULT_SETTINGS = {
-    "print_prefix": ("${color:lightblue}ZzZ", "prefix for away messages. content is evaluted"),
-    "print_away_format": ("$nick is now away ${color:green}(${color:default}$away${color:green})",
-                          "format for printing away messages. content is evaluated. valid "
-                          "replacements are: '$nick' and '$away' (see /help eval for more)"),
-    "print_back_format": ("$nick has returned",
-                          "format for printing return messages. content is evaluated. "
-                          "valid replacements are: '$nick' (see /help eval for more)"),
-    "print_back_duration_format": ("$nick has returned ${color:green}(${color:default}gone $gone$"
-                                   "{color:green})",
-
-                                   "format for printing "
-                                   "return messages. content is evaluated. valid replacments are: "
-                                   "'$nick', '$gone' (see /help eval for more)"),
-
-    "print_changed_format": ("$nick is still away ${color:green}(${color:default}$away$"
-                             "{color:green})",
-
-                             "format for printing changed away. content is evaluated. valid "
-                             "replacements are: '$nick' and '$away' (see /help eval for more)")
-
+    "print_prefix": ("ZzZ", "prefix for away message"),
+    "color_prefix": ("lightblue", "color for the away message prefix in 'print_prefix'"),
+    "color_away": ("default", "color used for away/gone duration in printed away messages")
 }
 
 KNOWN_AWAY = defaultdict(dict)  # type: Dict[str, Dict[str, Tuple[datetime, str]]]
 CACHE = defaultdict(dict)  # type: Dict[str, Dict[str, Set]]
-COLOR = {}  # type: Dict[str, str]
 BUFFERS = {}  # type: Dict[str, str]
 TAGS = "irc_away,nick_{nick},no_highlight,notify_none,away_info,irc_smart_filter"
 
+MSG_BACK_NO_DURATION = "{cc_pfx}{pfx}\t{cc}{nick}{default} has returned"
+MSG_BACK_DURATION = "{cc_pfx}{pfx}\t{cc}{nick}{default} has returned {sep}({cc_away}gone" \
+                    " {duration}{sep})"
+MSG_AWAY = "{cc_pfx}{pfx}\t{cc}{nick}{default} is now away {sep}({cc_away}{awaymsg}{sep})"
+MSG_STILL_AWAY = "{cc_pfx}{pfx}\t{cc}{nick}{default} is still away {sep}({cc_away}{awaymsg}{sep})"
 
 def config_get(name: str):
     """ retrieve value of a setting """
@@ -115,10 +104,8 @@ def get_buffer(server, chan):
 
 
 def color_nick(nick):
-    """ colorize a nickname based on what WeeChat picked as it's prefix color. """
-    if nick in COLOR:
-        return w.color(COLOR[nick]) + nick + w.color("reset")
-    return w.color(w.info_get("nick_color_name", nick)) + nick + w.color("reset")
+    """ colorize a nickname based on what WeeChat picked as it's color. """
+    return w.color(w.info_get("nick_color_name", nick))
 
 
 def propagate_common_msg(server, common_nick, message):
@@ -130,14 +117,12 @@ def propagate_common_msg(server, common_nick, message):
     ## first check CACHE for common channels
     if common_nick in CACHE[server]:
         found_channel = True
-        message = message.replace("$nick", color_nick(common_nick))
         for chan in CACHE[server][common_nick]:
             w.prnt_date_tags(get_buffer(server, chan), 0, tags, message)
 
     ## look for query buffers
     if server + "." + common_nick in BUFFERS:
         found_query = True
-        message = message.replace("$nick", color_nick(common_nick))
         w.prnt_date_tags(get_buffer(server, common_nick), 0, tags, message)
 
     if found_channel and found_query:
@@ -163,23 +148,20 @@ def propagate_common_msg(server, common_nick, message):
 
         ## is a query buffer?
         if not found_query and common_nick == chan:
-            message = message.replace('$nick', color_nick(common_nick))
             w.prnt_date_tags(ptr, 0, tags, message)
             continue
 
         if found_channel:
             continue
 
-        nicks_il = w.infolist_get("irc_nick", "", "{},{}".format(server, chan))
+        nicks_il = w.infolist_get("irc_nick", "", server + "," + chan)
         if not nicks_il:
             continue
 
         while w.infolist_next(nicks_il):
             search_nick = w.infolist_string(nicks_il, "name")
-            COLOR[search_nick] = w.infolist_string(nicks_il, "color")
 
             if common_nick == search_nick or common_nick == chan:
-                message = message.replace('$nick', color_nick(common_nick))
                 w.prnt_date_tags(ptr, 0, tags, message)
 
             if search_nick not in CACHE[server]:
@@ -200,7 +182,6 @@ def away_in_cb(data, signal, signal_data):
     server = signal.split(",")[0]
     nick = ircmsg["nick"]
 
-    msg = config_get("print_prefix") + "\t"
     awaymsg = ircmsg["text"]
     if not awaymsg:
 
@@ -226,30 +207,39 @@ def away_in_cb(data, signal, signal_data):
             dur = dur.rstrip()
 
         if dur:
-
-            msg += config_get("print_back_duration_format")
-            msg = msg.replace("$gone", dur)
+            msg = MSG_BACK_DURATION.format(pfx=config_get("print_prefix"), cc=color_nick(nick),
+                                           nick=nick, sep=w.color("weechat.color.chat_delimiters"),
+                                           default=w.color("default"), duration=dur,
+                                           cc_away=w.color(config_get("color_away")),
+                                           cc_pfx=w.color(config_get("color_prefix")))
 
         else:
-            msg += config_get("print_back_format")
+            msg = MSG_BACK_NO_DURATION.format(pfx=config_get("print_prefix"), cc=color_nick(nick),
+                                           nick=nick, sep=w.color("weechat.color.chat_delimiters"),
+                                           default=w.color("default"),
+                                           cc_away=w.color(config_get("color_away")),
+                                           cc_pfx=w.color(config_get("color_prefix")))
 
-        msg = w.string_eval_expression(msg, {}, {}, {})
         propagate_common_msg(server, nick, msg)
 
     else:
 
         if nick in KNOWN_AWAY[server] and awaymsg != KNOWN_AWAY[server][nick][1]:
-            msg += config_get("print_changed_format")
-            msg = msg.replace("$away", awaymsg)
+            msg = MSG_STILL_AWAY.format(pfx=config_get("print_prefix"), cc=color_nick(nick),
+                                        nick=nick, sep=w.color("weechat.color.chat_delimiters"),
+                                        default=w.color("default"), awaymsg=awaymsg,
+                                        cc_away=w.color(config_get("color_away")),
+                                        cc_pfx=w.color(config_get("color_prefix")))
 
-            msg = w.string_eval_expression(msg, {}, {}, {})
             propagate_common_msg(server, nick, msg)
             KNOWN_AWAY[server][nick] = (datetime.now(), awaymsg)
         elif nick not in KNOWN_AWAY[server]:
-            msg += config_get("print_away_format")
-            msg = msg.replace("$away", awaymsg)
+            msg = MSG_AWAY.format(pfx=config_get("print_prefix"), cc=color_nick(nick), nick=nick,
+                                  sep=w.color("weechat.color.chat_delimiters"),
+                                  default=w.color("default"), awaymsg=awaymsg,
+                                  cc_away=w.color(config_get("color_away")),
+                                  cc_pfx=w.color(config_get("color_prefix")))
 
-            msg = w.string_eval_expression(msg, {}, {}, {})
             KNOWN_AWAY[server][nick] = (datetime.now(), awaymsg)
             propagate_common_msg(server, nick, msg)
 
@@ -335,9 +325,6 @@ def join_in_cb(data, signal, signal_data):
 
     if buffer_name not in BUFFERS:
         BUFFERS[buffer_name] = w.info_get("irc_buffer", server + "," + channel)
-
-    if nick not in COLOR:
-        COLOR[nick] = w.info_get("nick_color_name", nick)
 
     return w.WEECHAT_RC_OK
 
