@@ -53,7 +53,7 @@ from collections import defaultdict
 from datetime import datetime
 
 try:
-    from typing import List, Dict, Set, Tuple  # pylint: disable=unused-import
+    from typing import Dict, Set, Tuple  # pylint: disable=unused-import
 except ImportError:
     pass
 
@@ -316,8 +316,6 @@ def kick_in_cb(data, signal, signal_data):
 
         del BUFFERS[server + "." + channel]
     elif nick in CACHE[server]:
-        debug("user kicked from {0}.{1}, discarding channel from CACHE[{0}][{2}]",
-              server, channel, nick)
         CACHE[server][nick].discard(channel)
 
     return w.WEECHAT_RC_OK
