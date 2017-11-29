@@ -24,11 +24,9 @@
 away_print.py: Print changes in AWAY status on buffers for servers where away-notify is enabled.
 
 Settings: plugins.var.python.away_print.*
-    print_prefix                -> prefix for away print messages
-    print_away_format           -> printed message when someone goes away
-    print_back_format           -> printed message when someone returns from away
-    print_back_duration_format  -> printed message when someone returns away w/ a known duration
-    print_changed_format        -> printed message when someone's away message changes
+    print_prefix    -> prefix for away print messages
+    color_prefix    -> color to use for the prefix
+    color_away      -> color for away reasons and the gone duration in printed away messages
 
 note: there is no feature provided for hiding away messages from specific nicks or on specific
 buffers. instead, use WeeChat's /filter command with the tags printed on away message lines to hide
