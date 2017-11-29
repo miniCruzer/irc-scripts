@@ -58,7 +58,7 @@ except ImportError:
     pass
 
 SCRIPT_NAME = "away_print"
-SCRIPT_AUTHOR = "cruzr <sam@gentoo.party>"
+SCRIPT_AUTHOR = "Samuel Hoffman <sam@gentoo.party>"
 SCRIPT_VERSION = "2"
 SCRIPT_LICENSE = "MIT"
 SCRIPT_DESC = "Print changes in AWAY status on buffers for servers where away-notify is enabled."
@@ -213,10 +213,11 @@ def away_in_cb(data, signal, signal_data):
 
         else:
             msg = MSG_BACK_NO_DURATION.format(pfx=config_get("print_prefix"), cc=color_nick(nick),
-                                           nick=nick, sep=w.color("weechat.color.chat_delimiters"),
-                                           default=w.color("default"),
-                                           cc_away=w.color(config_get("color_away")),
-                                           cc_pfx=w.color(config_get("color_prefix")))
+                                              nick=nick,
+                                              sep=w.color("weechat.color.chat_delimiters"),
+                                              default=w.color("default"),
+                                              cc_away=w.color(config_get("color_away")),
+                                              cc_pfx=w.color(config_get("color_prefix")))
 
         propagate_common_msg(server, nick, msg)
 
