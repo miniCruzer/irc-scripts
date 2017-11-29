@@ -40,6 +40,7 @@ for example:
     filter all away messages on AlphaChat
         /filter add hide_alphachat_away irc.AlphaChat.* irc_away *
 
+Thanks to Aaron Jones for beta testing this script and giving me the idea to write it!
 """
 
 try:
