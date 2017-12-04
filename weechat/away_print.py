@@ -333,7 +333,7 @@ def irc_discon_cb(data, signal, signal_data):
     if signal_data in CACHE:
         del CACHE[signal_data]
 
-    for name in BUFFERS:
+    for name in BUFFERS.copy():
         if name.startswith(signal_data):
             del BUFFERS[name]
 
