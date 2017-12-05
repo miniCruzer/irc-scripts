@@ -113,13 +113,13 @@ def propagate_common_msg(server, common_nick, message):
     found_channel = False
     found_query = False
     tags = TAGS.format(nick=common_nick)
-    ## first check CACHE for common channels
+
     if common_nick in CACHE[server]:
         found_channel = True
         for chan in CACHE[server][common_nick]:
             w.prnt_date_tags(get_buffer(server, chan), 0, tags, message)
 
-    ## look for query buffers
+
     if server + "." + common_nick in BUFFERS:
         found_query = True
         w.prnt_date_tags(get_buffer(server, common_nick), 0, tags, message)
@@ -145,7 +145,6 @@ def propagate_common_msg(server, common_nick, message):
 
         BUFFERS["{}.{}".format(server, chan)] = ptr
 
-        ## is a query buffer?
         if not found_query and common_nick == chan:
             w.prnt_date_tags(ptr, 0, tags, message)
             continue
