@@ -52,13 +52,13 @@ SIG = {} # type: Dict[str, int]
 def hook(command: str, nargs: int) -> Callable:
     """ decorator for hooking a function to a sub command """
     global EVENTS, SIG
-    def ev_dec(fn):
+    def ev_dec(func):
         """ the actual decorator """
-        EVENTS[command] = fn
+        EVENTS[command] = func
         SIG[command] = nargs
         def wrapper(*args, **kwargs):
             """ wrapped function """
-            return fn(*args, **kwargs)
+            return func(*args, **kwargs)
         return wrapper
     return ev_dec
 

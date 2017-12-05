@@ -30,6 +30,8 @@ from typing import Dict
 
 import weechat as w
 
+# pylint: disable=W0603
+
 
 SCRIPT_NAME = "relay_activity"
 SCRIPT_AUTHOR = "cruzr <sam@gentoo.party>"
@@ -72,7 +74,7 @@ def relay_authed_cb(data: str, signal: str, signal_data: str) -> int:
     return w.WEECHAT_RC_OK
 
 
-def relay_discon(data: str, signal: str, signal_data: str) -> int:
+def relay_discon(data: str, signal: str, signal_data: str) -> int: # pylint: disable=W0613
     """ callback for when a relay disconnects from weechat """
     global IRC_RELAYS
 

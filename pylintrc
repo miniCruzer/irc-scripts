@@ -1,2 +1,5 @@
+[MASTER]
+jobs=0
+
 [TYPECHECK]
 ignored-modules=weechat
