@@ -90,7 +90,7 @@ def config_get(name: str):
 
 
 def config_set_defaults():
-    """ (first time run) create setting defaults and descriptoins """
+    """ (first time run) create setting defaults and descriptions """
     for option, (default, desc) in DEFAULT_SETTINGS.items():
         if not w.config_is_set_plugin(option):
             w.config_set_plugin(option, default)
